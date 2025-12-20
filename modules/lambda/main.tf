@@ -7,7 +7,7 @@ data "archive_file" "lambda_zip" {
 resource "aws_lambda_function" "certificate_parser" {
   function_name = "${var.project_name}-${var.environment}-certificate-parser"
   runtime       = "python3.11"
-  handler       = "handler.handler"
+  handler       = "handler.lambda_handler"
   role          = aws_iam_role.lambda_role.arn
 
   filename         = data.archive_file.lambda_zip.output_path
