@@ -12,4 +12,11 @@ resource "aws_lambda_function" "certificate_parser" {
 
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+
+  environment {
+    variables = {
+      CERTIFICATE_BUCKET = var.bucket_name
+      CERTIFICATE_TABLE  = var.dynamodb_table_name
+    }
+  }
 }

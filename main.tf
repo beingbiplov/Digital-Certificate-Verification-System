@@ -18,6 +18,8 @@ module "certificate_lambda" {
   environment  = var.environment
   bucket_arn   = module.certificate_bucket.bucket_arn
   bucket_name  = module.certificate_bucket.bucket_name
+  dynamodb_table_arn  = module.certificates_table.table_arn
+  dynamodb_table_name = module.certificates_table.table_name
 }
 
 module "certificate_api" {
