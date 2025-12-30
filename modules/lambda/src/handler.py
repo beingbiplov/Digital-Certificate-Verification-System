@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 
 # Clients
 s3 = boto3.client("s3")
-dynamodb = boto3.client("dynamodb")
+dynamodb = boto3.resource("dynamodb")
 
 # Environment variables
 TABLE_NAME = os.environ["CERTIFICATE_TABLE"]
