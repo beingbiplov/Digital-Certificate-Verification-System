@@ -1,10 +1,10 @@
 resource "aws_dynamodb_table" "certificates" {
   name         = "${var.project_name}-${var.environment}-certificates"
   billing_mode = var.billing_mode
-  hash_key     = "certificate_id"
+  hash_key     = "certificateId"
 
   attribute {
-    name = "certificate_id"
+    name = "certificateId"
     type = "S"
   }
 
