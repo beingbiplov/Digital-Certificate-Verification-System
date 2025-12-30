@@ -1,58 +1,88 @@
 import os
 import json
 import uuid
-import base64
+import boto3
 
-TMP_DIR = "/tmp"
+from datetime import datetime, timezone
 
-# Lambda handler
+# AWS clients
+s3 = boto3.client("s3")
+dynamodb = boto3.resource("dynamodb")
+
+UPLOAD_EXPIRY_SECONDS = 300  # 5 minutes
+TABLE_NAME = os.environ["CERTIFICATE_TABLE"]
+BUCKET_NAME = os.environ["CERTIFICATE_BUCKET"]
+
+table = dynamodb.Table(TABLE_NAME)
+
+""" 
+Lambda handler to create a presigned URL for uploading a certificate PDF.
+Expects a JSON body with "fileName" and optional "contentType".
+Records the upload request in DynamoDB with status "PENDING_UPLOAD".
+"""
 def lambda_handler(event, context):
     try:
         body = json.loads(event.get("body", "{}"))
 
-        file_base64 = body.get("fileBase64")
         file_name = body.get("fileName")
+        content_type = body.get("contentType", "application/pdf")
 
-        if not file_base64 or not file_name:
-            return _response(
-                400,
-                {"message": "Missing fileBase64 or fileName"}
-            )
+        if not file_name:
+            return _response(400, {"message": "Missing fileName"})
 
-        # Decode PDF
-        pdf_bytes = base64.b64decode(file_base64)
+        # Basic validation (pre-upload)
+        if not file_name.lower().endswith(".pdf"):
+            return _response(400, {"message": "Only PDF files are supported"})
 
-        # Write to /tmp
+        if content_type != "application/pdf":
+            return _response(400, {"message": "Invalid content type"})
+
+        # Generate object key
         file_id = str(uuid.uuid4())
-        file_path = os.path.join(TMP_DIR, f"{file_id}-{file_name}")
+        object_key = f"uploads/{file_id}/{file_name}"
 
-        with open(file_path, "wb") as f:
-            f.write(pdf_bytes)
+        # Record in DynamoDB as PENDING_UPLOAD
+        now = datetime.now(timezone.utc).isoformat()
+        table.put_item(
+            Item={
+                "certificateId": file_id,
+                "fileName": file_name,
+                "s3Key": object_key,
+                "status": "PENDING_UPLOAD",
+                "createdAt": now,
+            }
+        )
 
-        # Dummy extracted data (for now)
-        extracted_data = {
-            "name": "John Doe",
-            "course": "AWS Certified Developer",
-            "issuer": "Amazon Web Services"
-        }
+        # Generate presigned URL
+        presigned_url = s3.generate_presigned_url(
+            ClientMethod="put_object",
+            Params={
+                "Bucket": BUCKET_NAME,
+                "Key": object_key,
+                "ContentType": "application/pdf",
+            },
+            ExpiresIn=UPLOAD_EXPIRY_SECONDS,
+        )
 
         return _response(
             200,
             {
-                "uploaded": True,
-                "fileName": file_name,
-                "fileSizeBytes": len(pdf_bytes),
-                "fileId": file_id,
-                "extracted": extracted_data
+                "upload": {
+                    "fileId": file_id,
+                    "fileName": file_name,
+                    "bucket": BUCKET_NAME,
+                    "objectKey": object_key,
+                    "expiresInSeconds": UPLOAD_EXPIRY_SECONDS,
+                    "uploadUrl": presigned_url,
+                },
+                "next": "Upload the file using the presigned URL"
             }
         )
 
     except Exception as e:
         print("Error:", str(e))
-        return _response(
-            500,
-            {"message": "Failed to process PDF"}
-        )
+        return _response(500, {"message": "Failed to create upload URL"})
+
 
 # Helper to format HTTP response
 def _response(status_code, body):
