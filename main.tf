@@ -25,9 +25,9 @@ module "certificate_lambda" {
 module "certificate_api" {
   source = "./modules/api-gateway"
 
-  environment            = var.environment
-  lambda_invoke_arn      = module.certificate_lambda.invoke_arn
-  lambda_function_name   = module.certificate_lambda.lambda_function_name
+  environment                = var.environment
+  presign_lambda_invoke_arn  = module.certificate_lambda.invoke_arn
+  presign_lambda_name        = module.certificate_lambda.lambda_function_name
 }
 
 

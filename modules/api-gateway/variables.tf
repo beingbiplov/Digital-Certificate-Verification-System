@@ -3,12 +3,12 @@ variable "environment" {
   type        = string
 }
 
-variable "lambda_invoke_arn" {
-  description = "Invoke ARN of the Lambda function"
+variable "presign_lambda_invoke_arn" {
+  description = "Invoke ARN of the presign Lambda"
   type        = string
 }
 
-variable "lambda_function_name" {
-  description = "Name of the Lambda function"
+variable "presign_lambda_name" {
+  description = "Name of the presign Lambda"
   type        = string
 }

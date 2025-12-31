@@ -4,8 +4,8 @@ data "archive_file" "lambda_zip" {
   output_path = "${path.module}/lambda.zip"
 }
 
-resource "aws_lambda_function" "certificate_parser" {
-  function_name = "${var.project_name}-${var.environment}-certificate-parser"
+resource "aws_lambda_function" "certificate_presign" {
+  function_name = "${var.project_name}-${var.environment}-certificate-presign"
   runtime       = "python3.11"
   handler       = "handler.lambda_handler"
   role          = aws_iam_role.lambda_role.arn

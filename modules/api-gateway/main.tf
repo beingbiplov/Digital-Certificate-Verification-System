@@ -26,7 +26,7 @@ resource "aws_api_gateway_integration" "lambda_integration" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.lambda_invoke_arn
+  uri                     = var.presign_lambda_invoke_arn
 }
 
 # Deployment and Stage
@@ -63,7 +63,7 @@ resource "aws_api_gateway_stage" "stage" {
 resource "aws_lambda_permission" "allow_apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_function_name
+  function_name = var.presign_lambda_name
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_api_gateway_rest_api.certificate_api.execution_arn}/*/*"
