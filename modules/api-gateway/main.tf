@@ -34,7 +34,8 @@ resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.certificate_api.id
 
   depends_on = [
-    aws_api_gateway_integration.lambda_integration
+    aws_api_gateway_integration.lambda_integration,
+    aws_api_gateway_integration.options_certificates
   ]
 }
 
@@ -53,4 +54,46 @@ resource "aws_lambda_permission" "allow_apigw" {
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_api_gateway_rest_api.certificate_api.execution_arn}/*/*"
+}
+
+# CORS Configuration for /certificates
+resource "aws_api_gateway_method" "options_certificates" {
+  rest_api_id   = aws_api_gateway_rest_api.certificate_api.id
+  resource_id   = aws_api_gateway_resource.certificates.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_certificates" {
+  rest_api_id = aws_api_gateway_rest_api.certificate_api.id
+  resource_id = aws_api_gateway_resource.certificates.id
+  http_method = aws_api_gateway_method.options_certificates.http_method
+
+  type = "MOCK"
+}
+
+resource "aws_api_gateway_method_response" "options_200" {
+  rest_api_id = aws_api_gateway_rest_api.certificate_api.id
+  resource_id = aws_api_gateway_resource.certificates.id
+  http_method = aws_api_gateway_method.options_certificates.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_200" {
+  rest_api_id = aws_api_gateway_rest_api.certificate_api.id
+  resource_id = aws_api_gateway_resource.certificates.id
+  http_method = aws_api_gateway_method.options_certificates.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+  }
 }
