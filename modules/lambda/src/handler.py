@@ -95,7 +95,10 @@ def _response(status_code, body):
     return {
         "statusCode": status_code,
         "headers": {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "POST,OPTIONS"
         },
         "body": json.dumps(body)
     }
