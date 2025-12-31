@@ -4,10 +4,8 @@ import boto3
 from datetime import datetime, timezone
 from botocore.exceptions import ClientError
 
-s3 = boto3.client("s3")
 dynamodb = boto3.resource("dynamodb")
 
-BUCKET_NAME = os.environ["CERTIFICATE_BUCKET"]
 TABLE_NAME = os.environ["CERTIFICATE_TABLE"]
 
 table = dynamodb.Table(TABLE_NAME)
@@ -41,6 +39,18 @@ def lambda_handler(event, context):
 
         print(f"Certificate {file_id} processed successfully.")
 
+    except ClientError as e:
+        print("AWS ClientError:", e)
+        table.update_item(
+            Key={"certificateId": file_id},
+            UpdateExpression="SET #status = :s, errorMessage = :err",
+            ExpressionAttributeNames={"#status": "status"},
+            ExpressionAttributeValues={
+                ":s": "FAILED",
+                ":err": str(e),
+                ":p": now
+            }
+        )
     except Exception as e:
         print(f"Error processing certificate {file_id}:", e)
         # Update DynamoDB with failed status

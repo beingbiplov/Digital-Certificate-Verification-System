@@ -21,3 +21,24 @@ resource "aws_lambda_function" "certificate_parser" {
     }
   }
 }
+
+# Permission for S3 to invoke Lambda
+resource "aws_lambda_permission" "allow_s3" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.certificate_parser.arn
+  principal     = "s3.amazonaws.com"
+}
+
+# S3 Bucket Notification to trigger parser Lambda
+resource "aws_s3_bucket_notification" "certificate_parser_trigger" {
+  bucket = var.bucket_name
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.certificate_parser.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_suffix       = ".pdf" 
+  }
+
+  depends_on = [aws_lambda_permission.allow_s3]
+}
