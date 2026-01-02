@@ -23,7 +23,7 @@ def structure_certificate_text(raw_text: str) -> dict:
     """
 
     response = bedrock.invoke_model(
-        modelId="amazon.titan-text", 
+        modelId="amazon.titan-text-lite-v1", 
         contentType="application/json",
         body=json.dumps({"prompt": prompt, "max_tokens": 500})
     )
