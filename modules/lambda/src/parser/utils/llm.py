@@ -14,15 +14,21 @@ def structure_certificate_text(raw_text: str) -> dict:
     print("Calling LLM to structure certificate data")
 
     prompt = f"""
-        You are a system that extracts structured data from certificates.
+        You extract structured data from certificates.
 
-        Extract the following fields and return ONLY valid JSON:
-        - documentType
-        - issuer
-        - issuedDate (YYYY-MM-DD if possible)
-        - confidenceScore (0-100)
+        Rules:
+        - Do NOT guess or infer missing values
+        - If a field is not clearly present, return null
+        - Return ONLY valid JSON (no explanations)
 
-        Certificate Text:
+        Extract the following fields:
+        - documentType: always "CERTIFICATE"
+        - issuer: organization or authority issuing the certificate
+        - recipientName: full name of the person the certificate is issued to
+        - issuedDate: date of issue in YYYY-MM-DD format if present
+        - confidenceScore: number from 0 to 100 indicating confidence in extraction
+
+        Certificate text:
         {raw_text}
         """
 
