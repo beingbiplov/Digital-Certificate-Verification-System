@@ -2,6 +2,7 @@ import os
 import boto3
 import urllib.parse
 
+from decimal import Decimal
 from datetime import datetime, timezone
 
 MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
@@ -78,7 +79,7 @@ def lambda_handler(event, context):
             "documentType": "CERTIFICATE",
             "issuer": "Dummy Authority",
             "issuedDate": "2026-01-01",
-            "confidenceScore": 0.99
+            "confidenceScore": Decimal("95.5")
         }
 
         now = datetime.now(timezone.utc).isoformat()
