@@ -34,23 +34,26 @@ resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.certificate_api.id
 
   triggers = {
-    redeploy = sha1(jsonencode([
-      aws_api_gateway_method.post_certificate.id,
-      aws_api_gateway_method.options_certificates.id,
-      aws_api_gateway_integration.lambda_integration.id,
-      aws_api_gateway_integration.options_certificates.id
-    ]))
+    redeploy = sha1(jsonencode({
+      post_method      = aws_api_gateway_method.post_certificate.id
+      options_method   = aws_api_gateway_method.options_certificates.id
+      post_integration = aws_api_gateway_integration.lambda_integration.id
+      options_int      = aws_api_gateway_integration.options_certificates.id
+      lambda_arn       = var.presign_lambda_invoke_arn
+    }))
   }
 
   depends_on = [
     aws_api_gateway_integration.lambda_integration,
-    aws_api_gateway_integration.options_certificates
+    aws_api_gateway_integration.options_certificates,
+    aws_lambda_permission.allow_apigw
   ]
 
   lifecycle {
     create_before_destroy = true
   }
 }
+
 
 #  Stage for the API
 resource "aws_api_gateway_stage" "stage" {
