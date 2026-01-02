@@ -32,9 +32,13 @@ resource "aws_iam_role_policy" "lambda_access" {
         Action = [
           "s3:PutObject",
           "s3:GetObject",
-          "s3:HeadObject"
+          "s3:HeadObject",
+          "s3:ListBucket"
         ]
-        Resource = "${var.bucket_arn}/uploads/*"
+        Resource = [
+          "${var.bucket_arn}",      
+          "${var.bucket_arn}/uploads/*"
+        ]
       },
       {
         Effect = "Allow"
