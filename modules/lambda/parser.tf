@@ -11,6 +11,9 @@ resource "aws_lambda_function" "certificate_parser" {
   handler       = "parser_handler.lambda_handler"
   role          = aws_iam_role.lambda_role.arn
 
+  timeout       = 60
+  memory_size   = 512
+
   filename         = data.archive_file.parser_lambda_zip.output_path
   source_code_hash = data.archive_file.parser_lambda_zip.output_base64sha256
 
