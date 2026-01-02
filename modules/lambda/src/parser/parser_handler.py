@@ -1,5 +1,6 @@
 import os
 import boto3
+import urllib.parse
 
 from datetime import datetime, timezone
 
@@ -16,6 +17,9 @@ def lambda_handler(event, context):
     record = event["Records"][0]["s3"]
     bucket = record["bucket"]["name"]
     object_key = record["object"]["key"]
+    
+    # Decode S3 key to handle spaces and special characters
+    object_key = urllib.parse.unquote_plus(object_key)
 
     print(f"Parser triggered for {bucket}/{object_key}")
 
