@@ -1,14 +1,14 @@
 import boto3
 import json
 
-bedrock = boto3.client("bedrock")
+bedrock = boto3.client("bedrock-runtime")
 
 def structure_certificate_text(raw_text: str) -> dict:
     """
     Calls LLM to structure raw text into JSON with keys:
     documentType, issuer, issuedDate, confidenceScore
     """
-
+    
     prompt = f"""
     Extract the following fields from the certificate text and return as JSON:
     - documentType
@@ -28,7 +28,7 @@ def structure_certificate_text(raw_text: str) -> dict:
         body=json.dumps({"prompt": prompt, "max_tokens": 500})
     )
     
-    ## for debugging
+    # for debugging
     print("LLM response received", response)
 
     result = json.loads(response['body'].read())
