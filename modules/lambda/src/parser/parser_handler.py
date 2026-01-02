@@ -3,8 +3,9 @@ import json
 import boto3
 import urllib.parse
 
-from decimal import Decimal
 from datetime import datetime, timezone
+
+from extract_utils import extract_text
 
 MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
 PDF_MAGIC = b"%PDF-"
@@ -75,7 +76,11 @@ def lambda_handler(event, context):
 
         if magic != PDF_MAGIC:
             return _fail(certificate_id, "Invalid PDF magic number")
-        
+
+        extracted_text = extract_text(bucket, object_key)
+
+        print("Textract extracted text:", extracted_text[:200])  # Preview first 200 chars
+
         extracted_data = {
             "documentType": "CERTIFICATE",
             "issuer": "Dummy Authority",
