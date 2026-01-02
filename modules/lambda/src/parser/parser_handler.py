@@ -1,6 +1,8 @@
 import os
 import boto3
 
+from datetime import datetime, timezone
+
 MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
 PDF_MAGIC = b"%PDF-"
 
@@ -67,16 +69,33 @@ def lambda_handler(event, context):
 
         if magic != PDF_MAGIC:
             return _fail(certificate_id, "Invalid PDF magic number")
+        
+        extracted_data = {
+            "documentType": "CERTIFICATE",
+            "issuer": "Dummy Authority",
+            "issuedDate": "2026-01-01",
+            "confidenceScore": 0.99
+        }
+
+        now = datetime.now(timezone.utc).isoformat()
 
         # Passed validation
         table.update_item(
             Key={"certificateId": certificate_id},
-            UpdateExpression="SET #s = :s",
+            UpdateExpression="""
+                SET #s = :s,
+                    extractedData = :d,
+                    processedAt = :p
+            """,
             ExpressionAttributeNames={"#s": "status"},
-            ExpressionAttributeValues={":s": "PROCESSED"},
+            ExpressionAttributeValues={
+                ":s": "PROCESSED",
+                ":d": extracted_data,
+                ":p": now
+            },
         )
 
-        print("PDF parsing successful")
+        print("PDF validation successful, extracted data stored")
 
     except Exception as e:
         print("Parser error:", str(e))
