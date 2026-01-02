@@ -20,11 +20,11 @@ def lambda_handler(event, context):
     try:
         # uploads/{certificateId}/{fileName}
         parts = object_key.split("/")
-        if len(parts) < 3:
+        if len(parts) < 2:
             print("Invalid object key format")
             return
 
-        certificate_id = parts[1]
+        certificate_id = parts[-2]
         file_name = parts[-1]
 
         # fetch record
@@ -84,7 +84,7 @@ def lambda_handler(event, context):
 
 
 def _fail(certificate_id, reason):
-    print("Validation failed:", reason)
+    print(f"Validation failed for {certificate_id}: {reason}")
     table.update_item(
         Key={"certificateId": certificate_id},
         UpdateExpression="SET #s = :s, failureReason = :r",
