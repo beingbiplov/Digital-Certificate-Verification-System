@@ -1,7 +1,7 @@
 import boto3
 import json
 
-bedrock = boto3.client("bedrock-runtime")
+bedrock = boto3.client("bedrock-runtime", region_name="eu-west-1")
 
 MODEL_ID = "amazon.titan-text-express-v1"
 
