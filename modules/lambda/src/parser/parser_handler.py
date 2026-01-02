@@ -5,7 +5,8 @@ import urllib.parse
 
 from datetime import datetime, timezone
 
-from utils import extract_text
+from src.utils.textExtract import extract_text
+from src.utils.llm import structure_certificate_text
 
 MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
 PDF_MAGIC = b"%PDF-"
@@ -78,15 +79,11 @@ def lambda_handler(event, context):
             return _fail(certificate_id, "Invalid PDF magic number")
 
         extracted_text = extract_text(bucket, object_key)
-
-        print("Textract extracted text:", extracted_text[:200])  # Preview first 200 chars
-
-        extracted_data = {
-            "documentType": "CERTIFICATE",
-            "issuer": "Dummy Authority",
-            "issuedDate": "2026-01-01",
-            "confidenceScore": 95.5
-        }
+        print("Extracted text from PDF, length:", len(extracted_text))
+        
+        print("Calling LLM to structure certificate data")
+        structured_data = structure_certificate_text(extracted_text)
+        print('Structured data received from LLM:')
 
         now = datetime.now(timezone.utc).isoformat()
 
@@ -101,7 +98,7 @@ def lambda_handler(event, context):
             ExpressionAttributeNames={"#s": "status"},
             ExpressionAttributeValues={
                 ":s": "PROCESSED",
-                ":d": json.dumps(extracted_data),
+                ":d": json.dumps(structured_data),
                 ":p": now
             },
         )

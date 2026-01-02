@@ -14,10 +14,13 @@ def extract_text(bucket: str, key: str) -> str:
         All extracted text as a single string.
     """
 
+    print(f"Extracting text from s3://{bucket}/{key} using Textract")
     response = textract.detect_document_text(
         Document={"S3Object": {"Bucket": bucket, "Name": key}}
     )
 
+    print("Textract response received")
+    
     lines = [block["Text"] for block in response["Blocks"] if block["BlockType"] == "LINE"]
 
     return "\n".join(lines)
