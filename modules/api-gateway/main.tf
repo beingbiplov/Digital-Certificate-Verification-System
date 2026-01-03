@@ -40,13 +40,20 @@ resource "aws_api_gateway_deployment" "deployment" {
       post_integration = aws_api_gateway_integration.lambda_integration.id
       options_int      = aws_api_gateway_integration.options_certificates.id
       lambda_arn       = var.presign_lambda_invoke_arn
+      get_method       = aws_api_gateway_method.get_certificate.id
+      get_integration  = aws_api_gateway_integration.get_certificate_integration.id
+      options_get      = aws_api_gateway_method.options_certificate_id.id
+      options_get_int  = aws_api_gateway_integration.options_certificate_id.id
     }))
   }
 
   depends_on = [
     aws_api_gateway_integration.lambda_integration,
     aws_api_gateway_integration.options_certificates,
-    aws_lambda_permission.allow_apigw
+    aws_lambda_permission.allow_apigw,
+    aws_api_gateway_integration.get_certificate_integration,
+    aws_api_gateway_integration.options_certificate_id,
+    aws_lambda_permission.allow_apigw_get
   ]
 
   lifecycle {
