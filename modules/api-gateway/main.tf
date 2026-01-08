@@ -15,7 +15,8 @@ resource "aws_api_gateway_method" "post_certificate" {
   rest_api_id   = aws_api_gateway_rest_api.certificate_api.id
   resource_id   = aws_api_gateway_resource.certificates.id
   http_method   = "POST"
-  authorization = "NONE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
 }
 
 # Integration with Lambda
