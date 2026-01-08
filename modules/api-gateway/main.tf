@@ -45,6 +45,7 @@ resource "aws_api_gateway_deployment" "deployment" {
       get_integration  = aws_api_gateway_integration.get_certificate_integration.id
       options_get      = aws_api_gateway_method.options_certificate_id.id
       options_get_int  = aws_api_gateway_integration.options_certificate_id.id
+      authorizer       = aws_api_gateway_authorizer.cognito.id
     }))
   }
 
