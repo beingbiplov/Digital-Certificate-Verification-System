@@ -22,6 +22,7 @@ resource "aws_cognito_user_pool_client" "web_client" {
   # Callback URLs
   callback_urls = [
     "http://localhost:3000/callback",
+    "http://localhost:3000",
     "http://localhost:5000/callback"
   ]
 
