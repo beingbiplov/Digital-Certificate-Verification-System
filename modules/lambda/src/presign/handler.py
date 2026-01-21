@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import boto3
+import base64
 
 from datetime import datetime, timezone
 from botocore.exceptions import ClientError
@@ -19,6 +20,27 @@ UPLOAD_EXPIRY_SECONDS = 300  # 5 minutes
 
 table = dynamodb.Table(TABLE_NAME)
 
+def _get_user_id(event):
+    headers = event.get("headers") or {}
+    auth = headers.get("Authorization") or headers.get("authorization")
+    if not auth:
+        return None
+
+    token = auth.split(" ")[-1]  # supports "Bearer <token>" or "<token>"
+    parts = token.split(".")
+    if len(parts) < 2:
+        return None
+
+    payload_b64 = parts[1]
+    # add base64 padding
+    payload_b64 += "=" * (-len(payload_b64) % 4)
+
+    try:
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64.encode("utf-8")))
+        return payload.get("sub")
+    except Exception:
+        return None
+
 """ 
 Lambda handler to create a presigned URL for uploading a certificate PDF.
 Expects a JSON body with "fileName" and optional "contentType".
@@ -29,6 +51,10 @@ def lambda_handler(event, context):
     print("Event:", event)
     
     try:
+        user_id = _get_user_id(event)
+        if not user_id:
+            return _response(401, {"message": "Unauthorized"})
+
         body = json.loads(event.get("body", "{}"))
 
         file_name = body.get("fileName")
@@ -53,6 +79,7 @@ def lambda_handler(event, context):
         table.put_item(
             Item={
                 "certificateId": file_id,
+                "userId": user_id,
                 "fileName": file_name,
                 "s3Key": object_key,
                 "status": "PENDING_UPLOAD",
@@ -100,7 +127,7 @@ def _response(status_code, body):
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
             "Access-Control-Allow-Methods": "POST,OPTIONS"
         },
         "body": json.dumps(body)
