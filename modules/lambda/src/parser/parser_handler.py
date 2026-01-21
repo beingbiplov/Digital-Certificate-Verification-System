@@ -1,6 +1,7 @@
 import os
 import json
 import boto3
+import hashlib
 import urllib.parse
 
 from datetime import datetime, timezone
@@ -16,6 +17,20 @@ dynamodb = boto3.resource("dynamodb")
 
 TABLE_NAME = os.environ["CERTIFICATE_TABLE"]
 table = dynamodb.Table(TABLE_NAME)
+
+def _sha256_of_s3_object(bucket: str, key: str) -> str:
+    """
+    Stream the S3 object and compute SHA-256 without loading whole file into memory.
+    """
+    h = hashlib.sha256()
+    obj = s3.get_object(Bucket=bucket, Key=key)
+    body = obj["Body"]
+
+    # Stream in chunks
+    for chunk in iter(lambda: body.read(1024 * 1024), b""):  # 1MB chunks
+        h.update(chunk)
+
+    return h.hexdigest()
 
 def lambda_handler(event, context):
     record = event["Records"][0]["s3"]
@@ -78,12 +93,15 @@ def lambda_handler(event, context):
         if magic != PDF_MAGIC:
             return _fail(certificate_id, "Invalid PDF magic number")
 
+        file_hash_sha256 = _sha256_of_s3_object(bucket, object_key)
+        print("Computed SHA-256:", file_hash_sha256)
+
         extracted_text = extract_text(bucket, object_key)
         print("Extracted text from PDF, length:", len(extracted_text))
         
         print("Calling LLM to structure certificate data")
         structured_data = structure_certificate_text(extracted_text)
-        print('Structured data received from LLM:')
+        print("Structured data received from LLM")
 
         now = datetime.now(timezone.utc).isoformat()
 
@@ -93,17 +111,21 @@ def lambda_handler(event, context):
             UpdateExpression="""
                 SET #s = :s,
                     extractedData = :d,
-                    processedAt = :p
+                    processedAt = :p,
+                    fileHashSha256 = :h,
+                    fileSizeBytes = :b
             """,
             ExpressionAttributeNames={"#s": "status"},
             ExpressionAttributeValues={
                 ":s": "PROCESSED",
                 ":d": json.dumps(structured_data),
-                ":p": now
+                ":p": now,
+                ":h": file_hash_sha256,
+                ":b": size,
             },
         )
 
-        print("PDF validation successful, extracted data stored")
+        print("PDF validation successful, extracted data + hash stored")
 
     except Exception as e:
         print("Parser error:", str(e))
