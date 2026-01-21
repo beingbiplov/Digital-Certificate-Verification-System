@@ -11,9 +11,9 @@ output "user_pool_client_id" {
 }
 
 output "hosted_ui_login_url" {
-  value = "https://${aws_cognito_user_pool_domain.this.domain}.auth.${var.aws_region}.amazoncognito.com/login?client_id=${aws_cognito_user_pool_client.web_client.id}&response_type=code&scope=openid+email+profile&redirect_uri=http://localhost:3000/callback"
+  value = "https://${aws_cognito_user_pool_domain.this.domain}.auth.${var.aws_region}.amazoncognito.com/login?client_id=${aws_cognito_user_pool_client.web_client.id}&response_type=code&scope=openid+email+profile&redirect_uri=https://d10bh05vd2ikdz.cloudfront.net/callback"
 }
 
 output "hosted_ui_logout_url" {
-  value = "https://${aws_cognito_user_pool_domain.this.domain}.auth.${var.aws_region}.amazoncognito.com/logout?client_id=${aws_cognito_user_pool_client.web_client.id}&logout_uri=http://localhost:3000"
+  value = "https://${aws_cognito_user_pool_domain.this.domain}.auth.${var.aws_region}.amazoncognito.com/logout?client_id=${aws_cognito_user_pool_client.web_client.id}&logout_uri=https://d10bh05vd2ikdz.cloudfront.net/"
 }

@@ -21,15 +21,10 @@ resource "aws_cognito_user_pool_client" "web_client" {
 
   # Callback URLs
   callback_urls = [
-    "http://localhost:3000/callback",
-    "http://localhost:3000",
-    "http://localhost:5000/callback",
     "https://d10bh05vd2ikdz.cloudfront.net/"
   ]
 
   logout_urls = [
-    "http://localhost:3000",
-    "http://localhost:5000",
     "https://d10bh05vd2ikdz.cloudfront.net/"
   ]
 
