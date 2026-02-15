@@ -49,6 +49,8 @@ It reduces fraud and eliminates manual verification by combining cryptographic h
 
 ## 🏗 Architecture Overview
 
+![Architecture Diagram](assets/architecture_diagram.png)
+
 ### Frontend
 
 - Static SPA hosted on S3
